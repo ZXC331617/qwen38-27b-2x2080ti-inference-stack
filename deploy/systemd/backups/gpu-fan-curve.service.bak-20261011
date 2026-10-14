@@ -1,0 +1,17 @@
+[Unit]
+Description=GPU fan curve for 2x RTX 2080 Ti (needs nvidia X server)
+After=multi-user.target
+
+[Service]
+Type=simple
+Environment=FAN_DISPLAY=:1
+Environment=FAN_INTERVAL=10
+ExecStartPre=/bin/bash -c 'pgrep -f "Xorg :1" >/dev/null 2>&1 || (setsid /usr/bin/Xorg :1 -config /etc/X11/xorg-nvidia-fan.conf -noreset -logfile /tmp/xorg-fan.log < /dev/null > /dev/null 2>&1 & sleep 8)'
+ExecStart=/usr/local/bin/gpu-fan-curve.sh
+Restart=always
+RestartSec=15
+StandardOutput=append:/var/log/gpu-fan-curve.log
+StandardError=append:/var/log/gpu-fan-curve.log
+
+[Install]
+WantedBy=multi-user.target

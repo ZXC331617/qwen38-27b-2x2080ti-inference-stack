@@ -9,6 +9,19 @@
 
 ---
 
+## 文档索引
+
+| 文档 | 内容 |
+|---|---|
+| [README.md](README.md)（本页） | 总览：硬件、模型、速度数据、优化要点、生产配置 |
+| [docs/benchmarks.md](docs/benchmarks.md) · [EN](docs/benchmarks.en.md) | 全档位实测数据 + A/B 对照（含日志来源与口径说明） |
+| [docs/optimization.md](docs/optimization.md) · [EN](docs/optimization.en.md) | 优化过程、根因分析与**失败记录** |
+| [docs/deployment.md](docs/deployment.md) · [EN](docs/deployment.en.md) | 从零部署九步流程与排障 |
+| [deploy/README.md](deploy/README.md) | 部署包逐文件说明 |
+| [deploy/systemd/MANIFEST.md](deploy/systemd/MANIFEST.md) | systemd 单元逐文件清单（含 sha256） |
+
+---
+
 ## 一、硬件
 
 | 项 | 规格 |

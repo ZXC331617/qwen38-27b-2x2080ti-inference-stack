@@ -1,0 +1,8 @@
+default_stage:
+  default_modifiers:
+    QuantizationModifier:
+      targets: [Linear]
+      ignore: [lm_head, 're:.*embed_tokens.*', 're:.*mtp.*', 're:.*visual.*']
+      scheme: W4A16
+      bypass_divisibility_checks: false
+      requires_calibration_data: false

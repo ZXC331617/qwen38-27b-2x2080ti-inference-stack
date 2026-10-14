@@ -1,0 +1,20 @@
+[Unit]
+Description=Prometheus (LLM inference monitoring)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/opt/prometheus/prometheus \
+    --config.file=/etc/prometheus/prometheus.yml \
+    --storage.tsdb.path=/opt/prometheus/data \
+    --storage.tsdb.retention.time=30d \
+    --web.listen-address=0.0.0.0:9090 \
+    --web.enable-lifecycle
+Restart=on-failure
+RestartSec=10
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

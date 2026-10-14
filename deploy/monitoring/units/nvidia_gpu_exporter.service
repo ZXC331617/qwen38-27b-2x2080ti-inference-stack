@@ -1,0 +1,14 @@
+[Unit]
+Description=NVIDIA GPU Exporter (nvidia-smi based)
+After=network-online.target nvidia-persistenced.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/nvidia_gpu_exporter --web.listen-address=0.0.0.0:9835
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

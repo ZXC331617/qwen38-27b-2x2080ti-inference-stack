@@ -1,0 +1,163 @@
+### systemctl cat (monitoring) ###
+# /etc/systemd/system/prometheus.service
+[Unit]
+Description=Prometheus (LLM inference monitoring)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/opt/prometheus/prometheus \
+    --config.file=/etc/prometheus/prometheus.yml \
+    --storage.tsdb.path=/opt/prometheus/data \
+    --storage.tsdb.retention.time=30d \
+    --web.listen-address=0.0.0.0:9090 \
+    --web.enable-lifecycle
+Restart=on-failure
+RestartSec=10
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+
+# /lib/systemd/system/grafana-server.service
+[Unit]
+Description=Grafana instance
+Documentation=http://docs.grafana.org
+Wants=network-online.target
+After=network-online.target
+After=postgresql.service mariadb.service mysql.service influxdb.service
+
+[Service]
+EnvironmentFile=/etc/default/grafana-server
+User=grafana
+Group=grafana
+Type=simple
+Restart=on-failure
+WorkingDirectory=/usr/share/grafana
+RuntimeDirectory=grafana
+RuntimeDirectoryMode=0750
+ExecStart=/usr/share/grafana/bin/grafana server                                     \
+                            --config=${CONF_FILE}                                   \
+                            --pidfile=${PID_FILE_DIR}/grafana-server.pid            \
+                            --packaging=deb                                         \
+                            cfg:default.paths.logs=${LOG_DIR}                       \
+                            cfg:default.paths.data=${DATA_DIR}                      \
+                            cfg:default.paths.plugins=${PLUGINS_DIR}                \
+                            cfg:default.paths.provisioning=${PROVISIONING_CFG_DIR}
+
+LimitNOFILE=10000
+TimeoutStopSec=20
+CapabilityBoundingSet=
+DeviceAllow=
+LockPersonality=true
+MemoryDenyWriteExecute=false
+NoNewPrivileges=true
+PrivateDevices=true
+PrivateTmp=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHome=true
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectProc=invisible
+ProtectSystem=full
+RemoveIPC=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+SystemCallArchitectures=native
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target
+
+# /etc/systemd/system/node_exporter.service
+[Unit]
+Description=Prometheus Node Exporter
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/node_exporter --web.listen-address=0.0.0.0:9100
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+
+# /etc/systemd/system/nvidia_gpu_exporter.service
+[Unit]
+Description=NVIDIA GPU Exporter (nvidia-smi based)
+After=network-online.target nvidia-persistenced.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/nvidia_gpu_exporter --web.listen-address=0.0.0.0:9835
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+
+### systemctl status --no-pager -l (monitoring) ###
+--- prometheus ---
+● prometheus.service - Prometheus (LLM inference monitoring)
+     Loaded: loaded (/etc/systemd/system/prometheus.service; enabled; vendor preset: enabled)
+     Active: active (running) since Tue 2026-10-13 08:32:44 CST; 1 day 11h ago
+   Main PID: 2042 (prometheus)
+      Tasks: 42 (limit: 38166)
+     Memory: 137.1M
+        CPU: 17min 36.433s
+     CGroup: /system.slice/prometheus.service
+             └─2042 /opt/prometheus/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/opt/prometheus/data --storage.tsdb.retention.time=30d --web.listen-address=0.0.0.0:9090 --web.enable-lifecycle
+
+10月 14 17:00:01 ubuntu-desktop prometheus[2042]: time=2026-10-14T09:00:01.667Z level=INFO source=compact.go:591 msg="write block" component=tsdb mint=1791957600000 maxt=1791964800000 ulid=01M4WT7P2JTKMAK811YS14QZ0Z duration=176.679256ms ooo=false
+10月 14 17:00:01 ubuntu-desktop prometheus[2042]: time=2026-10-14T09:00:01.672Z level=INFO source=head.go:1371 msg="Head GC completed" component=tsdb caller=truncateMemory duration=3.872533ms
+--- grafana-server ---
+● grafana-server.service - Grafana instance
+     Loaded: loaded (/lib/systemd/system/grafana-server.service; enabled; vendor preset: enabled)
+     Active: active (running) since Tue 2026-10-13 08:32:44 CST; 1 day 11h ago
+       Docs: http://docs.grafana.org
+   Main PID: 2039 (grafana)
+      Tasks: 63 (limit: 38166)
+     Memory: 130.6M
+        CPU: 28min 24.870s
+     CGroup: /system.slice/grafana-server.service
+             └─2039 /usr/share/grafana/bin/grafana server --config=/etc/grafana/grafana.ini --pidfile=/run/grafana/grafana-server.pid --packaging=deb cfg:default.paths.logs=/var/log/grafana cfg:default.paths.data=/var/lib/grafana cfg:default.paths.plugins=/var/lib/grafana/plugins cfg:default.paths.provisioning=/etc/grafana/provisioning
+
+10月 14 19:53:00 ubuntu-desktop grafana[2039]: logger=context userId=1 orgId=1 uname=admin t=2026-10-14T19:53:00.186675993+08:00 level=info msg="Request Completed" method=POST path=/api/ds/query status=400 remote_addr=192.168.5.14 time_ms=229 duration=229.468452ms size=422 referer="http://192.168.5.88:3000/d/vllm-qwen38-monitor/d7752e5?from=now-5m&orgId=1&refresh=5s&timezone=browser&to=now" handler=/api/ds/query status_source=downstream
+--- node_exporter ---
+● node_exporter.service - Prometheus Node Exporter
+     Loaded: loaded (/etc/systemd/system/node_exporter.service; enabled; vendor preset: enabled)
+     Active: active (running) since Tue 2026-10-13 08:32:44 CST; 1 day 11h ago
+   Main PID: 2040 (node_exporter)
+      Tasks: 7 (limit: 38166)
+     Memory: 18.3M
+        CPU: 27min 4.210s
+     CGroup: /system.slice/node_exporter.service
+             └─2040 /usr/local/bin/node_exporter --web.listen-address=0.0.0.0:9100
+
+10月 13 08:32:44 ubuntu-desktop node_exporter[2040]: ts=2026-10-13T00:32:44.675Z caller=node_exporter.go:118 level=info collector=time
+10月 13 08:32:44 ubuntu-desktop node_exporter[2040]: ts=2026-10-13T00:32:44.675Z caller=node_exporter.go:118 level=info collector=timex
+--- nvidia_gpu_exporter ---
+● nvidia_gpu_exporter.service - NVIDIA GPU Exporter (nvidia-smi based)
+     Loaded: loaded (/etc/systemd/system/nvidia_gpu_exporter.service; enabled; vendor preset: enabled)
+     Active: active (running) since Tue 2026-10-13 08:32:44 CST; 1 day 11h ago
+   Main PID: 2041 (nvidia_gpu_expo)
+      Tasks: 25 (limit: 38166)
+     Memory: 25.0M
+        CPU: 4h 37min 58.365s
+     CGroup: /system.slice/nvidia_gpu_exporter.service
+             └─2041 /usr/local/bin/nvidia_gpu_exporter --web.listen-address=0.0.0.0:9835
+
+10月 13 08:32:44 ubuntu-desktop systemd[1]: Started NVIDIA GPU Exporter (nvidia-smi based).
+10月 13 08:32:45 ubuntu-desktop nvidia_gpu_exporter[2041]: time=2026-10-13T08:32:45.189+08:00 level=INFO source=tls_config.go:347 msg="Listening on" address=[::]:9835

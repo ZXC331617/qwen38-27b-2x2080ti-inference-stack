@@ -1,0 +1,21 @@
+[Unit]
+Description=GPU fan curve for 2x RTX 2080 Ti (needs nvidia X server)
+After=nvidia-persistenced.service
+
+[Service]
+Type=simple
+Environment=FAN_DISPLAY=:1
+Environment=FAN_INTERVAL=10
+# 2026-10-11 修：原写法 pgrep -f "Xorg :1" 会匹配到 ExecStartPre 自身父进程的
+# 命令行（里面有 "Xorg :1" 字面量），导致重启后误判「已存在」而跳过启动 Xorg :1，
+# 风扇曲线随即失效。改为直接探测 :1 是否可查询，不可用则清理残留锁并重建。
+# pkill 用 "Xorg :[1]" 正则，避免再次自匹配。
+ExecStartPre=-/bin/bash -c 'if ! nvidia-settings -c :1 -t -q GPUCurrentFanSpeed >/dev/null 2>&1; then pkill -f "Xorg :[1]" >/dev/null 2>&1; rm -f /tmp/.X11-unix/X1 /tmp/.X1-lock; setsid /usr/bin/Xorg :1 -config /etc/X11/xorg-nvidia-fan.conf -noreset -logfile /tmp/xorg-fan.log < /dev/null > /dev/null 2>&1 & for i in $(seq 1 25); do nvidia-settings -c :1 -t -q GPUCurrentFanSpeed >/dev/null 2>&1 && break; sleep 1; done; fi'
+ExecStart=/usr/local/bin/gpu-fan-curve.sh
+Restart=always
+RestartSec=15
+StandardOutput=append:/var/log/gpu-fan-curve.log
+StandardError=append:/var/log/gpu-fan-curve.log
+
+[Install]
+WantedBy=multi-user.target

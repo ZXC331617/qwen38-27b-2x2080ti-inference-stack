@@ -1,0 +1,185 @@
+##### systemctl cat vllm-qwen38 #####
+# /etc/systemd/system/vllm-qwen38.service
+[Unit]
+Description=vLLM Qwen3.8-27B-Uncensored-AWQ Inference Server (RTX 2080 Ti x2, TP=2)
+After=network-online.target nvidia-persistenced.service
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/root/vLLM-2080Ti-Definitive-main
+
+Environment=HOME=/root
+Environment=LANG=zh_CN.UTF-8
+Environment=LANGUAGE=zh_CN:zh
+Environment=XDG_DATA_DIRS=/usr/share/gnome:/usr/local/share:/usr/share:/var/lib/snapd/desktop
+Environment=PATH=/root/vLLM-2080Ti-Definitive-main/.venv/bin:/usr/local/cuda-13.0/bin:/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
+Environment=CUDACXX=/usr/local/cuda-13.0/bin/nvcc
+Environment=CUDA_HOME=/usr/local/cuda-13.0
+Environment=CUDA_PATH=/usr/local/cuda-13.0
+Environment=CUDA_DEVICE_ORDER=PCI_BUS_ID
+Environment=CUDA_VISIBLE_DEVICES=0,1
+Environment=FLASHQLA_ROOT=/root/vLLM-2080Ti-Definitive-main/.deps/FlashQLA-SM70-SM75
+Environment=PYTHONPATH=/root/vLLM-2080Ti-Definitive-main:/root/vLLM-2080Ti-Definitive-main/.deps/FlashQLA-SM70-SM75
+Environment=PYTHONSAFEPATH=1
+Environment=PYTHONUNBUFFERED=1
+Environment=TORCH_CUDA_ARCH_LIST=7.5
+Environment=TORCH_EXTENSIONS_DIR=/root/vLLM-2080Ti-Definitive-main/.deps/FlashQLA-SM70-SM75/.torch_extensions_vllm_flashqla_legacy
+Environment=TORCHINDUCTOR_CACHE_DIR=/root/vLLM-2080Ti-Definitive-main/torchinductor-cache
+Environment=TRITON_CACHE_DIR=/root/vLLM-2080Ti-Definitive-main/triton-cache
+Environment=FLASHINFER_ENABLE_AOT=1
+Environment=FLASHINFER_WORKSPACE_BASE=/root/vLLM-2080Ti-Definitive-main
+Environment=VLLM_DISABLE_TILELANG=1
+Environment=VLLM_SM75_SPEC_SYNC_MODE=safe
+Environment=VLLM_KV_CACHE_LAYOUT=BLHNC
+Environment=VLLM_ALLOW_MAMBA_SPEC_FULL_CUDAGRAPH=1
+Environment=VLLM_ENFORCE_STRICT_TOOL_CALLING=0
+Environment=VLLM_KV_BUDGET_FROM_FREE_MEMORY=1
+Environment=VLLM_MARLIN_USE_ATOMIC_ADD=1
+Environment=VLLM_KV_BUDGET_REDUNDANCY_MIB=150
+
+ExecStart=/root/vLLM-2080Ti-Definitive-main/.venv/bin/python -m vllm.entrypoints.openai.api_server \
+    --host 0.0.0.0 \
+    --port 8000 \
+    --model /root/models/Coder390-HUHUI-INC-A-W4A16 \
+    --served-model-name Coder390-HUHUI-INC-A-W4A16 Qwen3.8-27B-Coder390-Abliterated-W4A16 Qwen3.8-27B-Uncensored-AWQ \
+    --dtype half \
+    --quantization compressed-tensors \
+    --tensor-parallel-size 2 \
+    --generation-config auto \
+    --override-generation-config '{"max_new_tokens": 24576}' \
+    --gpu-memory-utilization 0.95 \
+    --max-model-len 225280 \
+    --enable-chunked-prefill \
+    --max-num-seqs 1 \
+    --max-num-batched-tokens 16384 \
+    --kv-cache-dtype fp8 \
+    --mamba-cache-mode align \
+    --enable-prefix-caching \
+    --enable-prompt-tokens-details \
+    --reasoning-parser qwen3 \
+    --limit-mm-per-prompt '{"image":64,"video":0,"audio":0}' \
+    --enable-auto-tool-choice \
+    --tool-call-parser qwen3_xml \
+    --additional-config '{"gdn_prefill_backend":"flashqla_legacy"}' \
+    --per-request-spec-decode-metrics detailed \
+    --speculative-config '{"method":"dflash","num_speculative_tokens":7,"model":"/root/models/Qwen3.8-27B-DFlash2-W4A16","attention_backend":"TRITON_ATTN","kv_cache_dtype":"float16","draft_sample_method":"probabilistic"}' \
+    --compilation-config '{"cudagraph_mode":"FULL_AND_PIECEWISE","cudagraph_capture_sizes":[8],"max_cudagraph_capture_size":8}'
+
+
+# P1: 每次启动后异步触发 kernel 预热（--no-block 不阻塞本服务启动）
+ExecStartPost=-/usr/bin/systemctl --no-block start vllm-warmup.service
+
+Restart=on-failure
+RestartSec=20
+TimeoutStartSec=1800
+TimeoutStopSec=90
+KillMode=mixed
+LimitNOFILE=1048576
+StandardOutput=append:/root/vLLM-2080Ti-Definitive-main/run-logs/systemd-vllm.log
+StandardError=append:/root/vLLM-2080Ti-Definitive-main/run-logs/systemd-vllm.log
+
+[Install]
+WantedBy=multi-user.target
+
+##### systemctl cat vllm-warmup #####
+# /etc/systemd/system/vllm-warmup.service
+[Unit]
+Description=vLLM kernel warmup across context lengths (after vllm-qwen38)
+After=vllm-qwen38.service
+# PartOf 才会在 vllm-qwen38 重启时把 warmup 一起重启；
+# BindsTo 只传播 stop，不传播 start，所以之前 vllm 重启后 warmup 再没跑过。
+PartOf=vllm-qwen38.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+# 预热四档共约 213s，必须关掉启动超时，否则会被 SIGTERM 打断
+TimeoutStartSec=0
+TimeoutStopSec=180
+Environment=WARMUP_BASE=http://127.0.0.1:8000
+Environment=WARMUP_MODEL=Qwen3.8-27B-Uncensored-AWQ
+Environment=WARMUP_PY=/root/vLLM-2080Ti-Definitive-main/.venv/bin/python
+Environment="WARMUP_SIZES=1024 16384 32768 65536"
+ExecStart=/usr/local/bin/vllm-warmup.sh
+RemainAfterExit=yes
+StandardOutput=append:/var/log/vllm-warmup.log
+StandardError=append:/var/log/vllm-warmup.log
+# 2026-10-11：预热跑完后接着触发 WorkBuddy 前缀缓存预热。
+# Type=oneshot 的 ExecStartPost 在 ExecStart 结束之后才执行，
+# 天然满足 wb-prefix-warm 需要的「warmup 已完成」前提。
+ExecStartPost=-/usr/bin/systemctl --no-block start wb-prefix-warm.service
+
+# 2026-10-11：本单元不再挂到 multi-user.target。
+# 原因：它是 oneshot（约 190s），multi-user.target 会等它跑完才算 active，
+# 实测把「启动完成」推迟到开机后 5.5 分钟（08:04:19 开机 -> 08:09:44 才 active）。
+# 现在统一由 vllm-qwen38.service 的 ExecStartPost 触发，预热照跑、启动不再被拖住。
+
+##### systemctl cat gpu-power-limit #####
+# /etc/systemd/system/gpu-power-limit.service
+[Unit]
+Description=Lock GPU power limit for 2x RTX 2080 Ti
+After=nvidia-persistenced.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+Environment=GPU_POWER_LIMIT_W=225
+ExecStart=/usr/local/bin/gpu-power-limit.sh
+Restart=on-failure
+RestartSec=15
+StandardOutput=append:/var/log/gpu-power-limit.log
+StandardError=append:/var/log/gpu-power-limit.log
+
+[Install]
+WantedBy=multi-user.target
+
+##### systemctl cat gpu-fan-curve #####
+# /etc/systemd/system/gpu-fan-curve.service
+[Unit]
+Description=GPU fan curve for 2x RTX 2080 Ti (needs nvidia X server)
+After=nvidia-persistenced.service
+
+[Service]
+Type=simple
+Environment=FAN_DISPLAY=:1
+Environment=FAN_INTERVAL=10
+# 2026-10-11 修：原写法 pgrep -f "Xorg :1" 会匹配到 ExecStartPre 自身父进程的
+# 命令行（里面有 "Xorg :1" 字面量），导致重启后误判「已存在」而跳过启动 Xorg :1，
+# 风扇曲线随即失效。改为直接探测 :1 是否可查询，不可用则清理残留锁并重建。
+# pkill 用 "Xorg :[1]" 正则，避免再次自匹配。
+ExecStartPre=-/bin/bash -c 'if ! nvidia-settings -c :1 -t -q GPUCurrentFanSpeed >/dev/null 2>&1; then pkill -f "Xorg :[1]" >/dev/null 2>&1; rm -f /tmp/.X11-unix/X1 /tmp/.X1-lock; setsid /usr/bin/Xorg :1 -config /etc/X11/xorg-nvidia-fan.conf -noreset -logfile /tmp/xorg-fan.log < /dev/null > /dev/null 2>&1 & for i in $(seq 1 25); do nvidia-settings -c :1 -t -q GPUCurrentFanSpeed >/dev/null 2>&1 && break; sleep 1; done; fi'
+ExecStart=/usr/local/bin/gpu-fan-curve.sh
+Restart=always
+RestartSec=15
+StandardOutput=append:/var/log/gpu-fan-curve.log
+StandardError=append:/var/log/gpu-fan-curve.log
+
+[Install]
+WantedBy=multi-user.target
+
+##### systemctl cat wb-prefix-warm #####
+# /etc/systemd/system/wb-prefix-warm.service
+[Unit]
+Description=WorkBuddy prefix-cache warmup (replay cached tools+system prefix)
+After=vllm-qwen38.service vllm-warmup.service
+BindsTo=vllm-qwen38.service
+
+[Service]
+Type=oneshot
+Environment=WB_WARMUP_BASE=http://127.0.0.1:8000
+Environment=WB_WARMUP_MODEL=Qwen3.8-27B-Uncensored-AWQ
+Environment=WB_WARMUP_PAYLOAD=/root/wb_warmup_payload.json
+Environment=WB_WARMUP_PY=/root/vLLM-2080Ti-Definitive-main/.venv/bin/python
+ExecStart=/usr/local/bin/wb-prefix-warm.sh
+StandardOutput=append:/var/log/wb-prefix-warm.log
+StandardError=append:/var/log/wb-prefix-warm.log
+
+# 2026-10-11：不再挂到 multi-user.target，改由 vllm-warmup.service 的
+# ExecStartPost 在预热结束后触发（否则它同样会把 multi-user.target 拖到预热之后）。
+# After=vllm-warmup.service 保留：从 warmup 的 ExecStartPost 触发时，
+# 该 ordering 保证它排在 warmup 的启动任务之后，不会与预热抢跑。
+

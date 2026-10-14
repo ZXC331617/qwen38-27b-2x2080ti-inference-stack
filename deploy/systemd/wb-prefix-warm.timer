@@ -1,0 +1,11 @@
+[Unit]
+Description=Periodic WorkBuddy prefix-cache warmup
+
+[Timer]
+OnCalendar=*-*-* *:00,10,20,30,40,50:00
+OnUnitActiveSec=10min
+AccuracySec=30s
+Unit=wb-prefix-warm.service
+
+[Install]
+WantedBy=timers.target

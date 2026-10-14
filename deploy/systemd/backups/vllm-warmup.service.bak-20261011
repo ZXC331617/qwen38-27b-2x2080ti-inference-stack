@@ -1,0 +1,24 @@
+[Unit]
+Description=vLLM kernel warmup across context lengths (after vllm-qwen38)
+After=vllm-qwen38.service
+# PartOf 才会在 vllm-qwen38 重启时把 warmup 一起重启；
+# BindsTo 只传播 stop，不传播 start，所以之前 vllm 重启后 warmup 再没跑过。
+PartOf=vllm-qwen38.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+# 预热四档共约 213s，必须关掉启动超时，否则会被 SIGTERM 打断
+TimeoutStartSec=0
+TimeoutStopSec=180
+Environment=WARMUP_BASE=http://127.0.0.1:8000
+Environment=WARMUP_MODEL=Qwen3.8-27B-Uncensored-AWQ
+Environment=WARMUP_PY=/root/vLLM-2080Ti-Definitive-main/.venv/bin/python
+Environment="WARMUP_SIZES=1024 16384 32768 65536"
+ExecStart=/usr/local/bin/vllm-warmup.sh
+RemainAfterExit=yes
+StandardOutput=append:/var/log/vllm-warmup.log
+StandardError=append:/var/log/vllm-warmup.log
+
+[Install]
+WantedBy=multi-user.target

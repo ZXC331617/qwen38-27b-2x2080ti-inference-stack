@@ -1,0 +1,16 @@
+[Unit]
+Description=Lock GPU power limit for 2x RTX 2080 Ti
+After=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+Environment=GPU_POWER_LIMIT_W=225
+ExecStart=/usr/local/bin/gpu-power-limit.sh
+Restart=on-failure
+RestartSec=15
+StandardOutput=append:/var/log/gpu-power-limit.log
+StandardError=append:/var/log/gpu-power-limit.log
+
+[Install]
+WantedBy=multi-user.target

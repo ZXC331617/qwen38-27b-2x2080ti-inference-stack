@@ -1,0 +1,17 @@
+[Unit]
+Description=WorkBuddy prefix-cache warmup (replay cached tools+system prefix)
+After=vllm-qwen38.service vllm-warmup.service
+BindsTo=vllm-qwen38.service
+
+[Service]
+Type=oneshot
+Environment=WB_WARMUP_BASE=http://127.0.0.1:8000
+Environment=WB_WARMUP_MODEL=Qwen3.8-27B-Uncensored-AWQ
+Environment=WB_WARMUP_PAYLOAD=/root/wb_warmup_payload.json
+Environment=WB_WARMUP_PY=/root/vLLM-2080Ti-Definitive-main/.venv/bin/python
+ExecStart=/usr/local/bin/wb-prefix-warm.sh
+StandardOutput=append:/var/log/wb-prefix-warm.log
+StandardError=append:/var/log/wb-prefix-warm.log
+
+[Install]
+WantedBy=multi-user.target

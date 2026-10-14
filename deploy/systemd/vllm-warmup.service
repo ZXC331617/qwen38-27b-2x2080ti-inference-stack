@@ -1,0 +1,30 @@
+[Unit]
+Description=vLLM kernel warmup across context lengths (after vllm-qwen38)
+After=vllm-qwen38.service
+# PartOf 才会在 vllm-qwen38 重启时把 warmup 一起重启；
+# BindsTo 只传播 stop，不传播 start，所以之前 vllm 重启后 warmup 再没跑过。
+PartOf=vllm-qwen38.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+# 预热四档共约 213s，必须关掉启动超时，否则会被 SIGTERM 打断
+TimeoutStartSec=0
+TimeoutStopSec=180
+Environment=WARMUP_BASE=http://127.0.0.1:8000
+Environment=WARMUP_MODEL=Qwen3.8-27B-Uncensored-AWQ
+Environment=WARMUP_PY=/root/vLLM-2080Ti-Definitive-main/.venv/bin/python
+Environment="WARMUP_SIZES=1024 16384 32768 65536"
+ExecStart=/usr/local/bin/vllm-warmup.sh
+RemainAfterExit=yes
+StandardOutput=append:/var/log/vllm-warmup.log
+StandardError=append:/var/log/vllm-warmup.log
+# 2026-10-11：预热跑完后接着触发 WorkBuddy 前缀缓存预热。
+# Type=oneshot 的 ExecStartPost 在 ExecStart 结束之后才执行，
+# 天然满足 wb-prefix-warm 需要的「warmup 已完成」前提。
+ExecStartPost=-/usr/bin/systemctl --no-block start wb-prefix-warm.service
+
+# 2026-10-11：本单元不再挂到 multi-user.target。
+# 原因：它是 oneshot（约 190s），multi-user.target 会等它跑完才算 active，
+# 实测把「启动完成」推迟到开机后 5.5 分钟（08:04:19 开机 -> 08:09:44 才 active）。
+# 现在统一由 vllm-qwen38.service 的 ExecStartPost 触发，预热照跑、启动不再被拖住。
