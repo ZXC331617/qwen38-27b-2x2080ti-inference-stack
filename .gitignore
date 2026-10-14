@@ -1,0 +1,24 @@
+# logs / temp
+*.log
+logs/
+*.tmp
+
+# local secrets
+.env
+secrets/
+*token*
+*credential*
+
+# internal scaffolding (not for publication)
+tasks/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+
+# editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

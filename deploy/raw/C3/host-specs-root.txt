@@ -1,0 +1,1 @@
+[sudo] ubuntu 的密码： bash: /tmp/c3r.sh: 没有那个文件或目录
