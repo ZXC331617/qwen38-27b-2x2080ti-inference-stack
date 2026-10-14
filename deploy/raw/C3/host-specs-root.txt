@@ -1,1 +1,300 @@
-[sudo] ubuntu 的密码： bash: /tmp/c3r.sh: 没有那个文件或目录
+[sudo] ubuntu 的密码： ===== du_models =====
+55G	/root/models/Coder390-BF16-ORIG
+52G	/root/models/Coder390-HUHUI-INC-A
+19G	/root/models/Coder390-HUHUI-INC-A-W4A16
+11M	/root/models/_dl_coder390
+19G	/root/models/Huihui-Coder390-Abliterated-W4A16
+2.3G	/root/models/Qwen3.8-27B-Coder390-DFlash2-FP8
+19G	/root/models/Qwen3.8-27B-Coder390-INT4-W4A16
+3.6G	/root/models/Qwen3.8-27B-DFlash2-BF16
+1.5G	/root/models/Qwen3.8-27B-DFlash2-W4A16
+20G	/root/models/Qwen3.8-27B-EfficientThink-Uncensored-AWQ-W4A16
+20G	/root/models/Qwen3.8-27B-Uncensored-Aggressive-W4A16-AWQ
+===== vllm_VERSION =====
+0.2.2-post2
+===== vllm_RELEASE_env =====
+# Shared release metadata for the published runtime preset.
+PROJECT_NAME="vLLM 2080 Ti Definitive Edition"
+PROJECT_AUTHOR="github.com/weicj"
+RUNTIME_IDENTITY="vllm-def-cu130"
+FORK_RELEASE="0.2.2-post2"
+BASE_VLLM_VERSION="0.29.1rc0-33-gb23433088b"
+UPSTREAM_COMMIT="b23433088bf29980d20dff1bd64c753dd8883506"
+VALIDATED_CUDA_VERSION="13.0"
+VALIDATED_TORCH_VERSION="2.13.0+cu130"
+VALIDATED_NVIDIA_DRIVER_VERSION="target-host-validated"
+
+# The upstream nightly snapshot above pins torch==2.13.0. This release follows
+# that runtime dependency set. The host target is intentionally newer
+# than the upstream Docker base; the legacy lane remains a separate release
+# branch rather than an install-time compatibility toggle.
+PRIMARY_CUDA_VERSION="13.0"
+PRIMARY_TORCH_VERSION="2.13.0"
+PRIMARY_PYTHON_VERSION="3.12"
+PRIMARY_UBUNTU_VERSION="26.04+"
+PRIMARY_MIN_KERNEL_MAJOR="7"
+PRIMARY_GCC_MAJOR="15"
+UPSTREAM_DOCKER_CUDA_VERSION="13.0.3"
+UPSTREAM_DOCKER_UBUNTU_VERSION="22.04"
+LEGACY_RUNTIME_BRANCH="v0.1.x"
+LEGACY_CUDA_VERSION="12.8"
+LEGACY_TORCH_VERSION="2.11.0"
+===== vllm_git =====
+fatal: 不是 git 仓库（或者任何父目录）：.git
+===== venv_locate =====
+ls: 无法访问 '/root/vLLM-2080Ti-Definitive-main/*venv*': 没有那个文件或目录
+ls: 无法访问 '/root/.venv*': 没有那个文件或目录
+ls: 无法访问 '/root/venv*': 没有那个文件或目录
+ls: 无法访问 '/root/vllm-venv*': 没有那个文件或目录
+/root/vLLM-2080Ti-Definitive-main/.venv
+===== venv_python_list =====
+lrwxrwxrwx 1 root root 73  9月 29 12:35 /root/vLLM-2080Ti-Definitive-main/.venv/bin/python -> /root/.local/share/uv/python/cpython-3.12-linux-x86_64-gnu/bin/python3.12
+lrwxrwxrwx 1 root root  6  9月 29 12:35 /root/vLLM-2080Ti-Definitive-main/.venv/bin/python3 -> python
+lrwxrwxrwx 1 root root  6  9月 29 12:35 /root/vLLM-2080Ti-Definitive-main/.venv/bin/python3.12 -> python
+===== torch_probe =====
+-- /root/vLLM-2080Ti-Definitive-main/.venv/bin/python
+3.12.14
+2.13.0+cu130
+13.0
+(7, 5)
+2
+NVIDIA GeForce RTX 2080 Ti
+vllm 0.29.1rc0+33.gb23433088b
+===== nvcc =====
+-rwxr-xr-x 1 root root 30153384  8月 21  2025 /usr/local/cuda-13.0/bin/nvcc
+-rwxr-xr-x 1 root root 30153384  8月 21  2025 /usr/local/cuda-13/bin/nvcc
+-rwxr-xr-x 1 root root 30153384  8月 21  2025 /usr/local/cuda/bin/nvcc
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2025 NVIDIA Corporation
+Built on Wed_Aug_20_01:58:59_PM_PDT_2025
+Cuda compilation tools, release 13.0, V13.0.88
+Build cuda_13.0.r13.0/compiler.36424714_0
+===== ethtool =====
+-- enp6s0
+===== model_configs =====
+---- /root/models/Coder390-HUHUI-INC-A-W4A16
+总计 18982452
+-rw-r--r-- 1 root root        8952 10月 14 08:47 chat_template.jinja
+-rw-r--r-- 1 root root        9578 10月 14 08:45 config.json
+-rw-r--r-- 1 root root         214 10月 14 08:37 generation_config.json
+-rw------- 1 root root   849400392 10月 14 08:45 model_mtp.safetensors
+-rw------- 1 root root 18568390152 10月 14 08:44 model.safetensors
+-rw-r--r-- 1 root root      186980 10月 14 08:45 model.safetensors.index.json
+-rw-r--r-- 1 root root         390 10月 14 08:47 preprocessor_config.json
+-rw-r--r-- 1 root root         263 10月 14 08:45 recipe.yaml
+-rw-r--r-- 1 root root        1124 10月 14 08:47 tokenizer_config.json
+-rw-r--r-- 1 root root    19989325 10月 14 08:47 tokenizer.json
+-rw-r--r-- 1 root root         385 10月 14 08:47 video_preprocessor_config.json
+-- config.json head
+{
+  "architectures": [
+    "Qwen3_5ForConditionalGeneration"
+  ],
+  "dtype": "bfloat16",
+  "image_token_id": 248056,
+  "language_model_only": false,
+  "model_type": "qwen3_5",
+  "quantization_config": {
+    "config_groups": {
+      "group_0": {
+        "format": "pack-quantized",
+        "input_activations": null,
+        "output_activations": null,
+        "targets": [
+          "Linear"
+        ],
+        "weights": {
+          "actorder": null,
+          "block_structure": null,
+          "dynamic": false,
+          "group_size": 128,
+          "num_bits": 4,
+          "observer": "memoryless_minmax",
+          "observer_kwargs": {},
+          "scale_dtype": null,
+          "strategy": "group",
+          "symmetric": true,
+          "type": "int",
+          "zp_dtype": null
+        }
+      }
+    },
+    "format": "pack-quantized",
+    "global_compression_ratio": null,
+    "ignore": [
+      "model.visual.blocks.0.attn.qkv",
+      "model.visual.blocks.0.attn.proj",
+      "model.visual.blocks.0.mlp.linear_fc1",
+      "model.visual.blocks.0.mlp.linear_fc2",
+      "model.visual.blocks.1.attn.qkv",
+      "model.visual.blocks.1.attn.proj",
+      "model.visual.blocks.1.mlp.linear_fc1",
+      "model.visual.blocks.1.mlp.linear_fc2",
+      "model.visual.blocks.2.attn.qkv",
+      "model.visual.blocks.2.attn.proj",
+      "model.visual.blocks.2.mlp.linear_fc1",
+      "model.visual.blocks.2.mlp.linear_fc2",
+      "model.visual.blocks.3.attn.qkv",
+      "model.visual.blocks.3.attn.proj",
+      "model.visual.blocks.3.mlp.linear_fc1",
+      "model.visual.blocks.3.mlp.linear_fc2",
+      "model.visual.blocks.4.attn.qkv",
+      "model.visual.blocks.4.attn.proj",
+      "model.visual.blocks.4.mlp.linear_fc1",
+      "model.visual.blocks.4.mlp.linear_fc2",
+      "model.visual.blocks.5.attn.qkv",
+      "model.visual.blocks.5.attn.proj",
+      "model.visual.blocks.5.mlp.linear_fc1",
+      "model.visual.blocks.5.mlp.linear_fc2",
+      "model.visual.blocks.6.attn.qkv",
+      "model.visual.blocks.6.attn.proj",
+      "model.visual.blocks.6.mlp.linear_fc1",
+      "model.visual.blocks.6.mlp.linear_fc2",
+      "model.visual.blocks.7.attn.qkv",
+      "model.visual.blocks.7.attn.proj",
+      "model.visual.blocks.7.mlp.linear_fc1",
+      "model.visual.blocks.7.mlp.linear_fc2",
+      "model.visual.blocks.8.attn.qkv",
+      "model.visual.blocks.8.attn.proj",
+      "model.visual.blocks.8.mlp.linear_fc1",
+      "model.visual.blocks.8.mlp.linear_fc2",
+      "model.visual.blocks.9.attn.qkv",
+      "model.visual.blocks.9.attn.proj",
+      "model.visual.blocks.9.mlp.linear_fc1",
+      "model.visual.blocks.9.mlp.linear_fc2",
+      "model.visual.blocks.10.attn.qkv",
+      "model.visual.blocks.10.attn.proj",
+      "model.visual.blocks.10.mlp.linear_fc1",
+      "model.visual.blocks.10.mlp.linear_fc2",
+      "model.visual.blocks.11.attn.qkv",
+      "model.visual.blocks.11.attn.proj",
+      "model.visual.blocks.11.mlp.linear_fc1",
+      "model.visual.blocks.11.mlp.linear_fc2",
+      "model.visu
+-- generation_config.json
+{
+  "bos_token_id": 248044,
+  "do_sample": true,
+  "eos_token_id": [
+    248046,
+    248044
+  ],
+  "pad_token_id": 248044,
+  "temperature": 1.0,
+  "top_k": 20,
+  "top_p": 0.95,
+  "transformers_version": "5.17.0"
+}
+---- /root/models/Qwen3.8-27B-DFlash2-W4A16
+总计 1478624
+-rw-r--r-- 1 ubuntu ubuntu       2238 10月  3 12:23 config.json
+-rw-r--r-- 1 ubuntu ubuntu 1514102576 10月  3 12:23 model.safetensors
+-- config.json head
+{
+  "architectures": [
+    "DFlash2DraftModel"
+  ],
+  "attention_bias": false,
+  "attention_dropout": 0.0,
+  "bos_token_id": null,
+  "is_causal": false,
+  "dflash_config": {
+    "block_size": 8,
+    "conv_group_size": 16,
+    "conv_kernel_size": 2,
+    "mask_token_id": 248070,
+    "selector_rank": 256,
+    "selector_top_k": 16,
+    "target_layer_ids": [
+      5,
+      19,
+      33,
+      47,
+      61
+    ]
+  },
+  "dtype": "bfloat16",
+  "eos_token_id": 248044,
+  "head_dim": 128,
+  "hidden_act": "silu",
+  "hidden_size": 5120,
+  "initializer_range": 0.02,
+  "intermediate_size": 17408,
+  "layer_types": [
+    "sliding_attention",
+    "sliding_attention",
+    "sliding_attention",
+    "sliding_attention",
+    "sliding_attention"
+  ],
+  "max_position_embeddings": 262144,
+  "max_window_layers": 5,
+  "model_type": "qwen3",
+  "num_attention_heads": 32,
+  "num_hidden_layers": 5,
+  "num_key_value_heads": 8,
+  "num_target_layers": 64,
+  "pad_token_id": 248044,
+  "rms_norm_eps": 1e-06,
+  "rope_parameters": {
+    "rope_theta": 10000000,
+    "rope_type": "default"
+  },
+  "sliding_window": 2048,
+  "tie_word_embeddings": false,
+  "transformers_version": "5.15.0",
+  "use_cache": true,
+  "use_sliding_window": true,
+  "vocab_size": 248320,
+  "quantization_config": {
+    "config_groups": {
+      "group_0": {
+        "format": "pack-quantized",
+        "input_activations": null,
+        "output_activations": null,
+        "targets": [
+          "re:.*\\.?(fc|layers\\.\\d+\\.(self_attn\\.o_proj|mlp\\.(gate|up|down|gate_up)_proj))$"
+        ],
+        "weights": {
+          "actorder": null,
+          "block_structure": null,
+          "dynamic": false,
+          "group_size": 128,
+          "num_bits": 4,
+          "observer": "memoryless_minmax",
+          "observer_kwargs": {},
+          "scale_dtype": null,
+          "strategy": "group",
+          "symmetric": true,
+          "type": "int",
+          "zp_dtype": null
+        }
+      }
+    },
+    "format": "pack-quantized",
+    "global_compression_ratio": null,
+    "ignore": [],
+    "kv_cache_scheme": null,
+    "quant_method": "compressed-tensors",
+    "quantization_status": "compressed",
+    "sparsity_config": {},
+    "transform_config": {},
+    "version": "0.19.0"
+  }
+}
+-- generation_config.json
+cat: /root/models/Qwen3.8-27B-DFlash2-W4A16/generation_config.json: 没有那个文件或目录
+===== models_dir =====
+总计 52
+drwxr-xr-x 3 ubuntu ubuntu  4096 10月 13 12:41 Coder390-BF16-ORIG
+drwxr-xr-x 2 root   root    4096 10月 14 08:25 Coder390-HUHUI-INC-A
+drwxr-xr-x 2 root   root    4096 10月 14 08:47 Coder390-HUHUI-INC-A-W4A16
+drwxr-xr-x 5 ubuntu ubuntu 12288 10月 14 12:48 _dl_coder390
+drwxr-xr-x 2 ubuntu ubuntu  4096 10月 13 07:55 Huihui-Coder390-Abliterated-W4A16
+drwxr-xr-x 2 ubuntu ubuntu  4096 10月 12 05:17 Qwen3.8-27B-Coder390-DFlash2-FP8
+drwxr-xr-x 2 ubuntu ubuntu  4096 10月 12 05:22 Qwen3.8-27B-Coder390-INT4-W4A16
+drwxr-xr-x 2 root   root    4096 10月 14 19:14 Qwen3.8-27B-DFlash2-BF16
+drwxr-xr-x 2 ubuntu ubuntu  4096 10月  3 12:23 Qwen3.8-27B-DFlash2-W4A16
+drwxr-xr-x 2 ubuntu ubuntu  4096 10月 12 07:49 Qwen3.8-27B-EfficientThink-Uncensored-AWQ-W4A16
+drwxr-xr-x 3 ubuntu ubuntu  4096 10月 11 17:06 Qwen3.8-27B-Uncensored-Aggressive-W4A16-AWQ
+===== END =====
