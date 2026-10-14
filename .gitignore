@@ -11,6 +11,10 @@ secrets/
 
 # internal scaffolding (not for publication)
 tasks/
+deploy/raw/
+docs/_facts.md
+subagent-*.md
+*.b64
 
 # python
 __pycache__/
