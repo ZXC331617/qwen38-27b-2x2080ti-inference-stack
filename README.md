@@ -17,6 +17,7 @@
 | [docs/benchmarks.md](docs/benchmarks.md) · [EN](docs/benchmarks.en.md) | 全档位实测数据 + A/B 对照（含日志来源与口径说明） |
 | [docs/optimization.md](docs/optimization.md) · [EN](docs/optimization.en.md) | 优化过程、根因分析与**失败记录** |
 | [docs/deployment.md](docs/deployment.md) · [EN](docs/deployment.en.md) | 从零部署九步流程与排障 |
+| [deploy/one-click-deploy.sh](deploy/one-click-deploy.sh) | **一键部署脚本**（安装 / 卸载 / 校验 / 状态） |
 | [deploy/README.md](deploy/README.md) | 部署包逐文件说明 |
 | [deploy/systemd/MANIFEST.md](deploy/systemd/MANIFEST.md) | systemd 单元逐文件清单（含 sha256） |
 
@@ -35,6 +36,7 @@
 | 系统盘 | 468 GB NVMe（生产时剩余约 194 GB） |
 | PyTorch | 2.13.0+cu130 |
 | 推理引擎 | **vLLM 2080 Ti Definitive Edition**（fork，`FORK_RELEASE=0.2.2-post2`，上游 github.com/weicj） |
+| 一键部署 | `sudo ./deploy/one-click-deploy.sh --start` |
 
 **SM75 的三个硬约束**（决定了下面所有取舍）：
 1. 没有原生 bf16 → 只能用 fp16 计算；
@@ -151,7 +153,53 @@
 
 ---
 
-## 六、目录结构
+## 六、一键部署
+
+仓库里带一个幂等的安装器，把 systemd 单元、运维脚本、监控配置一次装好：
+
+```bash
+git clone https://github.com/ZXC331617/qwen38-27b-2x2080ti-inference-stack.git
+cd qwen38-27b-2x2080ti-inference-stack
+
+# 看一眼会发生什么（不改任何东西）
+sudo ./deploy/one-click-deploy.sh --dry-run
+
+# 正式安装：装好并设为开机自启（不立即启动）
+sudo ./deploy/one-click-deploy.sh
+
+# 装好并立即启动
+sudo ./deploy/one-click-deploy.sh --start
+
+# 装完自检 / 看状态 / 回滚
+sudo ./deploy/one-click-deploy.sh --verify
+sudo ./deploy/one-click-deploy.sh --status
+sudo ./deploy/one-click-deploy.sh --uninstall
+```
+
+它会做的事：把 `deploy/scripts/*` 装到 `/usr/local/bin`，把 `deploy/systemd/*.service|*.timer`
+渲染后装到 `/etc/systemd/system`，`systemctl daemon-reload`，再按需 enable / start。
+
+**路径不是写死的**：默认路径（`/root/vLLM-2080Ti-Definitive-main`、`/root/models/...`）可以在安装时替换，
+脚本会用 `sed` 把单元里的路径改掉：
+
+```bash
+sudo ./deploy/one-click-deploy.sh \
+  --vllm-dir  /opt/vllm \
+  --model-dir /opt/models/main \
+  --draft-dir /opt/models/draft \
+  --power-limit 250 \
+  --with-monitoring --start
+```
+
+其它开关：`--no-fan-curve`（无 X server 的无头机）、`--no-prefix-warm`（不装前缀保温定时器）、
+`-y`（不交互）、`--dry-run`（只打印）。
+
+> 覆盖已有单元前会自动备份成 `<unit>.bak-oneclick-<时间戳>`，`--uninstall` 可完整回滚。
+> 脚本**不下载权重**，`--verify` 会检查两个模型目录是否存在。
+
+---
+
+## 七、目录结构
 
 ```
 README.md                中文说明（默认）
@@ -160,7 +208,11 @@ docs/
   benchmarks.md          全档位实测数据（中文）
   optimization.md        优化过程与结论（中文）
   deployment.md          从零部署步骤（中文）
+bench/
+  bench-harness-real.py  测速脚本（复现 docs/benchmarks 里的数字）
+  run-bench.ps1          测速启动器
 deploy/
+  one-click-deploy.sh    一键部署 / 卸载 / 校验脚本
   systemd/               systemd 单元原文
   scripts/               功耗墙 / 风扇曲线等脚本
   monitoring/            Prometheus / Grafana / exporter 配置
@@ -170,7 +222,7 @@ deploy/
 
 ---
 
-## 七、许可
+## 八、许可
 
 代码与配置：Apache-2.0（见 [LICENSE](LICENSE)）。
 模型权重与第三方组件的许可请遵循其各自仓库。

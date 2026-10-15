@@ -12,6 +12,20 @@ deployment plus the measured numbers.
 
 ---
 
+## Docs index
+
+| Document | Contents |
+|---|---|
+| [README.md](README.md) · [中文](README.md) | overview: hardware, model, speeds, findings, production config |
+| [docs/benchmarks.md](docs/benchmarks.md) · [EN](docs/benchmarks.en.md) | per-tier measurements + A/B comparisons (with log provenance) |
+| [docs/optimization.md](docs/optimization.md) · [EN](docs/optimization.en.md) | optimisation log, root causes and **failed attempts** |
+| [docs/deployment.md](docs/deployment.md) · [EN](docs/deployment.en.md) | nine-step from-scratch deployment + troubleshooting |
+| [deploy/one-click-deploy.sh](deploy/one-click-deploy.sh) | **one-click installer** (install / uninstall / verify / status) |
+| [deploy/README.md](deploy/README.md) | file-by-file description of the deploy bundle |
+| [deploy/systemd/MANIFEST.md](deploy/systemd/MANIFEST.md) | systemd unit manifest (with sha256) |
+
+---
+
 ## 1. Hardware
 
 | Item | Spec |
@@ -25,6 +39,7 @@ deployment plus the measured numbers.
 | System disk | 468 GB NVMe (~194 GB free in production) |
 | PyTorch | 2.13.0+cu130 |
 | Engine | **vLLM 2080 Ti Definitive Edition** (fork, `FORK_RELEASE=0.2.2-post2`, upstream github.com/weicj) |
+| One-click deploy | `sudo ./deploy/one-click-deploy.sh --start` |
 
 **Three hard constraints of SM75** (they drive every trade-off below):
 
@@ -162,7 +177,56 @@ Environment: `VLLM_MARLIN_USE_ATOMIC_ADD=1`, `VLLM_KV_BUDGET_FROM_FREE_MEMORY=1`
 
 ---
 
-## 6. Layout
+## 6. One-click deploy
+
+The repo ships an idempotent installer that puts the systemd units, helper scripts and
+monitoring config in place in one go:
+
+```bash
+git clone https://github.com/ZXC331617/qwen38-27b-2x2080ti-inference-stack.git
+cd qwen38-27b-2x2080ti-inference-stack
+
+# see what it would do (changes nothing)
+sudo ./deploy/one-click-deploy.sh --dry-run
+
+# install and enable at boot (do not start yet)
+sudo ./deploy/one-click-deploy.sh
+
+# install and start now
+sudo ./deploy/one-click-deploy.sh --start
+
+# post-install checks / status / rollback
+sudo ./deploy/one-click-deploy.sh --verify
+sudo ./deploy/one-click-deploy.sh --status
+sudo ./deploy/one-click-deploy.sh --uninstall
+```
+
+What it does: installs `deploy/scripts/*` into `/usr/local/bin`, renders
+`deploy/systemd/*.service|*.timer` into `/etc/systemd/system`, runs `systemctl daemon-reload`,
+then enables (and optionally starts) the services.
+
+**Paths are not hard-coded.** The defaults (`/root/vLLM-2080Ti-Definitive-main`,
+`/root/models/...`) can be replaced at install time — the script rewrites them inside the units:
+
+```bash
+sudo ./deploy/one-click-deploy.sh \
+  --vllm-dir  /opt/vllm \
+  --model-dir /opt/models/main \
+  --draft-dir /opt/models/draft \
+  --power-limit 250 \
+  --with-monitoring --start
+```
+
+Other switches: `--no-fan-curve` (headless box, no X server), `--no-prefix-warm` (skip the
+prefix-cache warm-up timer), `-y` (non-interactive), `--dry-run` (print only).
+
+> Any unit it overwrites is backed up to `<unit>.bak-oneclick-<timestamp>`, and `--uninstall`
+> rolls everything back. The script does **not** download weights; `--verify` checks that both
+> model directories exist.
+
+---
+
+## 7. Layout
 
 ```
 README.md                Chinese (default)
@@ -171,7 +235,11 @@ docs/
   benchmarks.md          per-tier measurements (Chinese)
   optimization.md        optimisation log and findings (Chinese)
   deployment.md          step-by-step deployment (Chinese)
+bench/
+  bench-harness-real.py  benchmark script (reproduces docs/benchmarks)
+  run-bench.ps1          benchmark launcher
 deploy/
+  one-click-deploy.sh    one-click install / uninstall / verify
   systemd/               systemd unit sources
   scripts/               power-limit / fan-curve scripts
   monitoring/            Prometheus / Grafana / exporter config
@@ -181,7 +249,7 @@ deploy/
 
 ---
 
-## 7. License
+## 8. License
 
 Code and configuration: Apache-2.0 (see [LICENSE](LICENSE)).
 Model weights and third-party components follow their own repositories' licenses.

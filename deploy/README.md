@@ -127,7 +127,42 @@ deploy/
 - 服务：`systemctl disable --now vllm-qwen38.service` 即回到无推理服务状态；功耗/风扇单元独立，可单独停
 - 本包**不包含**权重文件本体（19 GB / 1.5 GB），需另行获取；`models/` 只放配置
 
-## 7. 证据与可复现性
+## 7. 一键部署（推荐）
+
+不想按第 2 节的顺序手工装，直接用仓库自带的安装器：
+
+```bash
+cd <repo>
+sudo ./deploy/one-click-deploy.sh --dry-run          # 先看会做什么
+sudo ./deploy/one-click-deploy.sh                    # 安装 + 设为开机自启
+sudo ./deploy/one-click-deploy.sh --start            # 安装 + 立即启动
+sudo ./deploy/one-click-deploy.sh --verify           # 装完自检
+sudo ./deploy/one-click-deploy.sh --uninstall        # 完整回滚
+```
+
+对应第 2 节各步的映射：
+
+| 第 2 节步骤 | 一键脚本做的事 |
+|---|---|
+| 第 3 步（功耗 / 风扇） | 装 `scripts/gpu-power-limit.sh`、`gpu-fan-curve.sh` → `/usr/local/bin`，装两个 unit 并 enable |
+| 第 4 步（推理服务） | 装 `vllm-qwen38.service`、`vllm-warmup.service` + `vllm-warmup.sh` |
+| 第 5 步（前缀预热） | 装 `wb-prefix-warm.service` + `.timer`（`--no-prefix-warm` 可跳过） |
+| 第 6 步（监控栈） | `--with-monitoring` 时装 4 个 unit + `prometheus.yml` + Grafana provisioning |
+| 第 1、2 步（fork / 模型） | **不代劳**，只做存在性检查（`--verify` 会报缺失） |
+
+路径可替换（脚本用 `sed` 改写单元内容）：
+
+```bash
+sudo ./deploy/one-click-deploy.sh \
+  --vllm-dir /opt/vllm --model-dir /opt/models/main --draft-dir /opt/models/draft \
+  --power-limit 250 --with-monitoring --start
+```
+
+覆盖已有单元前会备份为 `<unit>.bak-oneclick-<时间戳>`；`--dry-run` 只打印不改动。
+
+---
+
+## 8. 证据与可复现性
 
 `raw/` 下是采集过程的原始证据：
 
