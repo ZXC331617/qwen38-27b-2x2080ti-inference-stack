@@ -164,7 +164,7 @@ Full `ExecStart` at
 
 ```
 --model /root/models/Coder390-HUHUI-INC-A-W4A16
---served-model-name Coder390-HUHUI-INC-A-W4A16 Qwen3.8-27B-Coder390-Abliterated-W4A16 Qwen3.8-27B-Uncensored-AWQ
+--served-model-name Qwen3.8-27B-Uncensored-AWQ Coder390-HUHUI-INC-A-W4A16 Qwen3.8-27B-Coder390-Abliterated-W4A16
 --dtype half
 --quantization compressed-tensors
 --tensor-parallel-size 2
@@ -206,6 +206,9 @@ FLASHQLA_ROOT=/root/vLLM-2080Ti-Definitive-main/.deps/FlashQLA-SM70-SM75
 
 Common traps:
 
+- `--served-model-name` is **ordered**: vLLM lists the names in order in `/v1/models`, and the
+  `model` field in responses **echoes the first name**. To have clients see
+  `Qwen3.8-27B-Uncensored-AWQ`, it must come first (otherwise the first alias is echoed back).
 - `--max-num-seqs 1` + `cudagraph_capture_sizes [8]`: keeps the DFlash2 verify step inside one
   CUDA Graph — the standard pairing for single-stream.
 - `VLLM_KV_BUDGET_FROM_FREE_MEMORY=1`: the KV pool is allocated from **free** VRAM, so peak

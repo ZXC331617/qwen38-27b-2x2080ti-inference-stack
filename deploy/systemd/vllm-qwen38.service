@@ -43,7 +43,7 @@ ExecStart=/root/vLLM-2080Ti-Definitive-main/.venv/bin/python -m vllm.entrypoints
     --host 0.0.0.0 \
     --port 8000 \
     --model /root/models/Coder390-HUHUI-INC-A-W4A16 \
-    --served-model-name Coder390-HUHUI-INC-A-W4A16 Qwen3.8-27B-Coder390-Abliterated-W4A16 Qwen3.8-27B-Uncensored-AWQ \
+    --served-model-name Qwen3.8-27B-Uncensored-AWQ Coder390-HUHUI-INC-A-W4A16 Qwen3.8-27B-Coder390-Abliterated-W4A16 \
     --dtype half \
     --quantization compressed-tensors \
     --tensor-parallel-size 2 \

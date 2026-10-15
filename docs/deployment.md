@@ -161,7 +161,7 @@ systemctl is-enabled vllm-qwen38.service gpu-power-limit.service gpu-fan-curve.s
 
 ```
 --model /root/models/Coder390-HUHUI-INC-A-W4A16
---served-model-name Coder390-HUHUI-INC-A-W4A16 Qwen3.8-27B-Coder390-Abliterated-W4A16 Qwen3.8-27B-Uncensored-AWQ
+--served-model-name Qwen3.8-27B-Uncensored-AWQ Coder390-HUHUI-INC-A-W4A16 Qwen3.8-27B-Coder390-Abliterated-W4A16
 --dtype half
 --quantization compressed-tensors
 --tensor-parallel-size 2
@@ -202,6 +202,8 @@ FLASHQLA_ROOT=/root/vLLM-2080Ti-Definitive-main/.deps/FlashQLA-SM70-SM75
 
 几个容易踩的点：
 
+- `--served-model-name` 是**有序**的：vLLM 在 `/v1/models` 里按顺序列出，并且**响应里的 `model` 字段回显的是第一个名字**。
+  想让客户端看到的模型名是 `Qwen3.8-27B-Uncensored-AWQ`，就必须把它放在第一位（否则会回显成第一个别名）。
 - `--max-num-seqs 1` + `cudagraph_capture_sizes [8]`：让 DFlash2 的 verify 步落进单张
   CUDA Graph，是单流场景的固定搭配。
 - `VLLM_KV_BUDGET_FROM_FREE_MEMORY=1`：KV 池按**剩余**显存分配，所以峰值激活与 KV 池是
